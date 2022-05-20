@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.api.db.dao.TbAmectTypeDao">
+    <insert id="insert" parameterType="tbAmectType">
+        insert into tb_amect_type
+        set type = #{type},
+            money = #{money},
+            systemic = false
+    </insert>
+    <update id="update" parameterType="hashmap">
+        update tb_amect_type
+        set type = #{type},
+            money = #{money}
+        where id = #{id}
+    </update>
+    <delete id="deleteAmectTypeByIds" parameterType="integer">
+        delete from tb_amect_type
+        where systemic = false and id in
+        <foreach collection="array" open="(" separator="," close=")" item="one">
+            #{one}
+        </foreach>
+    </delete>
+    <select id="searchAllAmectType" resultType="com.example.emos.api.db.pojo.TbAmectType">
+        SELECT id,
+               type,
+               money,
+               systemic
+        FROM tb_amect_type
+    </select>
+
+    <select id="searchAmectTypeByPage" resultType="java.util.HashMap" parameterType="hashmap">
+        select `at`.id,
+               `at`.type,
+               `at`.money,
+               `at`.systemic,
+               count(a.type_id) as notPay,
+               if(count(a.id) = 0 and systemic = false, "true", "false") as canDelete
+        from tb_amect_type `at`
+        left join tb_amect a on a.type_id = `at`.id and a.status = 1
+        <where>
+            <if test="type != null">
+                and `at`.type like '%${type}%'
+            </if>
+        </where>
+        group by `at`.id
+        limit #{start}, #{length}
+    </select>
+    <select id="searchAmectTypeCount" resultType="java.lang.Integer" parameterType="hashmap">
+        select count(temp.ct)
+        from (
+             select count(*) as ct
+             from tb_amect_type `at`
+             left join tb_amect a on `at`.id = a.type_id and a.status = 1
+             <where>
+                 <if test="type != null">
+                     and `at`.type like '%${type}%'
+                 </if>
+             </where>
+             group by `at`.id
+        ) as temp
+    </select>
+    <select id="searchById" resultType="java.util.HashMap">
+        select `type`,
+               money,
+               systemic
+        from tb_amect_type
+        where id = #{id}
+    </select>
+
+
+</mapper>

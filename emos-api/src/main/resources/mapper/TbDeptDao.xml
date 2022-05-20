@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.api.db.dao.TbDeptDao">
+    <insert id="insert">
+        insert into tb_dept
+        set dept_name = #{deptName}
+        <if test="tel != null">
+            , tel = #{tel}
+        </if>
+        <if test="email != null">
+            , email = #{email}
+        </if>
+        <if test="desc != null">
+            , desc = #{desc}
+        </if>
+    </insert>
+
+    <update id="update">
+        update tb_dept
+        set dept_name = #{deptName}, tel = #{tel}, email = #{email}, `desc` = #{desc}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteDeptIds">
+        delete from tb_dept
+        where id in
+        <foreach collection="array" open="(" separator="," close=")" item="one">
+            #{one}
+        </foreach>
+    </delete>
+
+    <select id="searchAllDept" resultType="HashMap">
+        SELECT id,
+               dept_name AS deptName
+        FROM tb_dept
+        ORDER BY id
+    </select>
+    <select id="searchById" parameterType="int" resultType="HashMap">
+        SELECT id,
+               dept_name AS deptName,
+               tel,
+               email,
+               `desc`
+        FROM tb_dept
+        WHERE id = #{id}
+    </select>
+    <select id="searchDeptByPage" resultType="java.util.HashMap" parameterType="hashmap">
+        select d.id, d.dept_name as deptName,
+        d.tel, d.email, d.desc, count(u.id) as emps
+        from tb_dept d left join tb_user u on u.dept_id = d.id and u.status = 1
+        <where>
+            <if test="deptName != null">
+                d.dept_name like '%${deptName}%'
+            </if>
+        </where>
+        group by d.id
+        limit #{start}, #{length}
+    </select>
+    <select id="searchDeptCount" resultType="long" parameterType="hashmap">
+        SELECT COUNT(*) FROM (
+        SELECT d.id
+        FROM tb_dept d LEFT JOIN tb_user u ON u.dept_id=d.id AND u.status=1
+        <where>
+            <if test="deptName!=null">
+                AND d.dept_name LIKE '%${deptName}%'
+            </if>
+        </where>
+        GROUP BY d.id
+        ) AS temp
+    </select>
+    <select id="searchCanDelete" resultType="java.lang.Boolean">
+        select if(sum(temp.users) > 0, false , true ) from (
+            select count(u.id) as users
+            from tb_dept d join tb_user u on u.dept_id = d.id
+            where d.id in
+            <foreach collection="array" open="(" separator="," close=")" item="one">
+                #{one}
+            </foreach>
+            group by d.id
+            ) as temp
+    </select>
+</mapper>

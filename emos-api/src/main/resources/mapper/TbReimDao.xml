@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.api.db.dao.TbReimDao">
+    <insert id="insert" parameterType="tbReim" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_reim
+        set user_id = #{userId},
+            content = #{content},
+            amount = #{amount},
+            anleihen = #{anleihen},
+            balance = #{balance},
+            type_id = #{typeId},
+            status = #{status},
+            create_time = now()
+    </insert>
+    <update id="updateReimInstanceId" parameterType="hashmap">
+        update tb_reim
+        set instance_id = #{instanceId}
+        where id = #{id}
+    </update>
+    <delete id="deleteReimById" parameterType="hashmap">
+        delete from tb_reim
+        where id = #{id}
+        and user_id = #{userId}
+        and status in(1,2)
+    </delete>
+
+    <select id="searchReimByPage" resultType="java.util.HashMap" parameterType="hashmap">
+        select r.id,
+               u.id,
+               u.`name`,
+               d.dept_name as deptName,
+               r.content,
+               r.amount,
+               r.anleihen,
+               r.balance,
+               r.type_id as typeId,
+               r.status,
+               date_format(r.create_time, '%Y-%m-%d') as createName,
+               if(r.user_id = #{currentUserId}, "true", "false") as mine
+        from tb_reim r
+        join tb_user u on r.user_id = u.id
+        join tb_dept d on u.dept_id = d.id 
+        <where>
+            <if test="deptId != null">
+                and u.dept_Id = #{deptId}
+            </if>
+            <if test="typeId != null">
+                and r.type_id = #{typeId}
+            </if>
+            <if test="status != null">
+                and r.status = #{status}
+            </if>
+            <if test="userId != null">
+                and u.id = #{userId}
+            </if>
+            <if test="name != null">
+                and u.name = #{name}
+            </if>
+            <if test="startDate != null &amp; endDate != null">
+                and r.create_time between #{startDate} and #{endDate}
+            </if>
+        </where>
+        order by r.id desc
+        limit #{start}, #{length}
+    </select>
+    <select id="searchReimCount" resultType="java.lang.Long" parameterType="hashmap">
+        SELECT COUNT(*)
+        FROM tb_reim r
+        JOIN tb_user u ON r.user_id = u.id
+        JOIN tb_dept d ON d.id = u.dept_id
+        <where>
+            <if test="deptId!=null">
+                AND u.dept_id = #{deptId}
+            </if>
+            <if test="typeId!=null">
+                AND r.type_id = #{typeId}
+            </if>
+            <if test="status!=null">
+                AND r.`status` = #{status}
+            </if>
+            <if test="userId!=null">
+                AND u.id = #{userId}
+            </if>
+            <if test="name!=null">
+                AND u.name LIKE '%${name}%'
+            </if>
+            <if test="startDate!=null &amp; endDate!=null">
+                AND r.create_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+    </select>
+    <select id="searchReimById" resultType="java.util.HashMap" parameterType="hashmap">
+        select r.instance_id as instanceId,
+               d.dept_name as dept,
+               u.name,
+               date_format(r.create_time, '%Y-%m-%d') as `date`,
+               r.content,
+               r.amount,
+               r.balance,
+               r.anleihen
+        from tb_reim r
+        join tb_user u on r.user_id = u.id
+        join tb_dept d on u.dept_id = d.id
+        where r.id = #{id} 
+        <if test="userId != null">
+            and u.id = #{userId}
+        </if>
+    </select>
+    <select id="searchInstanceIdById" resultType="java.lang.String">
+        select instance_id as instanceId
+        from tb_reim
+        where id = #{id}
+    </select>
+</mapper>

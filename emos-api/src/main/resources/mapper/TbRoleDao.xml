@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.api.db.dao.TbRoleDao">
+
+    <insert id="insert" parameterType="tbRole">
+        insert into tb_role
+        set role_name = #{roleName},
+            permissions = #{permissions}
+        <if test="desc != null">
+            ,`desc` = #{desc}
+        </if>
+    </insert>
+
+    <update id="update" parameterType="tbRole">
+        update tb_role
+        set role_name = #{roleName},
+            `desc` = #{desc}, permissions = #{permissions}
+        where id = #{id} and id != 0
+    </update>
+    <delete id="deleteRoleByIds">
+        delete from tb_role
+        where id in
+        <foreach collection="array" open="(" separator="," close=")" item="one">
+            #{one}
+        </foreach>
+        and systemic = false
+    </delete>
+
+    <select id="searchAllRole" resultType="HashMap">
+        SELECT id,
+               role_name AS roleName
+        FROM tb_role ORDER BY id
+    </select>
+    <select id="searchById" parameterType="int" resultType="HashMap">
+        SELECT
+            id,
+            role_name AS roleName,
+            permissions,
+            `desc`,
+            default_permissions AS defaultPermissions
+        FROM tb_role
+        WHERE id = #{id}
+    </select>
+    <select id="searchRoleByPage" resultType="java.util.HashMap" parameterType="hashmap">
+        select
+            r.id, r.role_name AS roleName,
+            count(u.id) as users,JSON_LENGTH (r.permissions) as permissions,
+            r.`desc`,r.systemic
+        from tb_role r
+        left join tb_user u on json_contains (u.role, convert (r.id, char ))
+        where 1=1
+        <if test="roleName != null">
+            and r.role_name like '%${roleName}%'
+        </if>
+        group by r.id
+        limit #{start}, #{length}
+    </select>
+    <select id="searchRoleCount" resultType="java.lang.Long" parameterType="hashmap">
+        select count(*) from (
+            select r.id
+            from tb_role r
+            left join tb_user u on json_contains(u.role, convert (r.id, char ))
+            where 1=1
+            <if test="roleName != null">
+                and r.role_name like '%${roleName}%'
+            </if>
+            group by r.id
+        ) as temp
+    </select>
+    <select id="searchUserIdByRoleId" resultType="java.lang.Integer" parameterType="int">
+        select u.id
+        from tb_role r
+        join tb_user u on json_contains(u.role, convert (r.id, char ))
+        where r.id = #{roleId}
+    </select>
+    <select id="searchCanDelete" resultType="java.lang.Boolean">
+        select IF( sum(temp.users) > 0, false , true ) as result from (
+            select count(u.id) as users
+            from tb_role r
+            join tb_user u on json_contains(u.role, convert(r.id, char ))
+            where r.id in
+            <foreach collection="array" open="(" separator="," close=")" item="one">
+                #{one}
+            </foreach>
+            group by r.id
+        ) as temp
+    </select>
+</mapper>

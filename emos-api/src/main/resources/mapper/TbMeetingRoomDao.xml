@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.api.db.dao.TbMeetingRoomDao">
+    <insert id="insert" parameterType="tbMeetingRoom">
+        insert into tb_meeting_room
+        set name = #{name}, max = #{max}
+        <if test="desc != null">
+            , `desc` = #{desc}
+        </if>
+        <if test="status != null">
+            ,status = #{status}
+        </if>
+    </insert>
+    <update id="update" parameterType="tbMeetingRoom">
+        update tb_meeting_room
+        set name = #{name}, max = #{max}, `desc` = #{desc}, status = #{status}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteMeetingRoomByIds">
+        delete from tb_meeting_room
+        where id in
+        <foreach collection="array" open="(" separator="," close=")" item="one">
+            #{one}
+        </foreach>
+    </delete>
+
+    <select id="searchAllMeetingRoom" resultType="HashMap">
+        SELECT id,
+               `name`
+        FROM tb_meeting_room
+        WHERE status=1
+    </select>
+    <select id="searchById" parameterType="int" resultType="HashMap">
+        SELECT id,
+               name,
+               max,
+               `desc`,
+               status
+        FROM tb_meeting_room
+        WHERE id = #{id}
+    </select>
+    <select id="searchFreeMeetingRoom" parameterType="HashMap" resultType="String">
+        SELECT temp.name
+        FROM (
+                SELECT mr.`name`, m.id
+                FROM tb_meeting_room mr
+                LEFT JOIN tb_meeting m ON mr.`name`=m.place
+                AND m.date=#{date}
+                AND(
+                    (#{start} BETWEEN m.`start` AND m.`end`) OR
+                    (#{end} BETWEEN m.`start` AND m.`end`)
+                )
+             ) temp
+        WHERE temp.id IS NULL
+    </select>
+
+    <select id="searchMeetingRoomByPage" resultType="java.util.HashMap" parameterType="hashmap">
+        select mr.id, mr.name, mr.max, mr.desc, mr.status
+        from tb_meeting_room mr
+        left join tb_meeting m on m.type=2 and mr.name = m.place
+        <if test="name != null">
+            where mr.name like '%${name}%'
+        </if>
+        group by mr.id
+        <if test="canDelete == false">
+            having count(m.id) > 0
+        </if>
+        <if test="canDelete == true">
+            having count(m.id) = 0
+        </if>
+        limit #{start}, #{length}
+    </select>
+    <select id="searchMeetingRoomCount" resultType="java.lang.Integer" parameterType="hashmap">
+        select count(*) from (
+            select mr.id
+            from tb_meeting_room mr
+            left join tb_meeting m on m.type = 2 and mr.name = m.place
+            <if test="name != null">
+                where mr.name like '%${name}%'
+            </if>
+            group by mr.id
+            <if test="canDelete == false">
+                having count(m.id) > 0
+            </if>
+            <if test="canDelete == true">
+                having count(m.id) = 0
+            </if>
+            ) as temp
+    </select>
+    <select id="searchCanDelete" resultType="java.lang.Boolean">
+        select if(sum(temp.meetings) > 0, false , true ) from (
+            select count(m.id) as meetings
+            from tb_meeting_room mr
+            left join tb_meeting m on m.type = 2 and mr.name = m.place
+            where mr.id in
+            <foreach collection="array" open="(" separator="," close=")" item="one">
+                #{one}
+            </foreach>
+            group by mr.id
+            ) as temp
+    </select>
+</mapper>

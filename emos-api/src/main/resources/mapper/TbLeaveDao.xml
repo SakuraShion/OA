@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.api.db.dao.TbLeaveDao">
+    <!-- useGeneratedKeys="true" keyProperty="id" 获取到插入记录的主键值 -->
+    <insert id="insert" parameterType="tbLeave" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_leave
+        set user_id = #{userId},
+            reason = #{reason},
+            `start` = #{start},
+            `end` = #{end},
+            days = #{days},
+            `type` = #{type}
+    </insert>
+    <update id="updateLeaveInstanceId">
+        update tb_leave
+        set instance_id = #{instanceId}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteLeaveById">
+        delete from tb_leave
+        where id = #{id}
+        and user_id = #{userId}
+        and status in(1,2)
+    </delete>
+
+    <select id="searchLeaveByPage" resultType="java.util.HashMap" parameterType="hashmap">
+        select l.id,
+               u.id AS userId,
+               u.`name`,
+               d.dept_name AS deptName,
+               DATE_FORMAT(l.`start`,'%Y-%m-%d %H:%i') AS `start`,
+               DATE_FORMAT(l.`end`,'%Y-%m-%d %H:%i') AS `end`,
+               l.type,
+               l.`status`,
+               l.reason,
+               l.instance_id AS instanceId,
+               IF(u.id = #{myId},TRUE,FALSE) AS mine
+        from tb_leave l
+        join tb_user u on l.user_id = u.id
+        left join tb_dept d on u.dept_id = d.id 
+        <where>
+            <if test="userId != null">
+                and u.id = #{userId}
+            </if>
+            <if test="name != null">
+                and u.name like '%${name}%'
+            </if>
+            <if test="deptId != null">
+                and d.id = #{deptId}
+            </if>
+            <if test="date != null">
+                and #{date} between date_format(l.`start`, '%Y-%m-%d') and date_format(l.`end`, '%Y-%m-%d')
+            </if>
+            <if test="status != null">
+                and l.status == #{status}
+            </if>
+            <if test="type != null">
+                and l.type = #{type}
+            </if>
+        </where>
+        order by l.id desc
+        limit #{start}, #{length}
+    </select>
+    <select id="searchLeaveCount" resultType="java.lang.Integer" parameterType="hashmap">
+        SELECT COUNT(*)
+        FROM
+        tb_leave l
+        JOIN tb_user u ON l.user_id = u.id
+        LEFT JOIN tb_dept d ON u.dept_id = d.id
+        <where>
+            <if test="userId != null">
+                AND u.id=#{userId}
+            </if>
+            <if test="name != null">
+                AND u.name LIKE '%${name}%'
+            </if>
+            <if test="deptId !=null">
+                AND d.id = #{deptId}
+            </if>
+            <if test="date !=null">
+                AND #{date} BETWEEN DATE_FORMAT(l.`start`,'%Y-%m-%d') AND DATE_FORMAT(l.`end`,'%Y-%m-%d')
+            </if>
+            <if test="status !=null">
+                AND l.status = #{status}
+            </if>
+            <if test="type !=null">
+                AND l.type = #{type}
+            </if>
+        </where>
+    </select>
+    <!-- 获取请假开始及结束时间是否和曾经请假时间有交集 -->
+    <select id="searchContradiction" resultType="java.lang.Long" parameterType="hashmap">
+        SELECT COUNT(*)
+        FROM tb_leave
+        WHERE user_id=#{userId} AND `status`!=2
+        AND ((#{start} BETWEEN `start` AND `end`) OR (#{end} BETWEEN `start` AND `end`))
+    </select>
+    <select id="searchInstanceIdById" resultType="java.lang.String" parameterType="int">
+        select instance_id from tb_leave where id = #{id}
+    </select>
+    <select id="searchLeaveById" resultType="java.util.HashMap" parameterType="hashmap">
+        select u.name,
+               u.sex,
+               d.dept_name as dept,
+               l.type,
+               date_format(l.`start`, '%Y-%m-%d %H:%i') as `start`,
+               date_format(l.`end`, '%Y-%m-%d %h:%i') as `end`,
+               l.reason
+        from tb_leave l
+        join tb_user u on l.user_id = u.id
+        join tb_dept d on u.dept_id = d.id
+        where l.id = #{id}
+        <if test="userId != null">
+            and u.id = #{userId}
+        </if>
+    </select>
+</mapper>
