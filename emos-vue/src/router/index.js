@@ -20,6 +20,7 @@ import AmectType from "../views/amect_type.vue"
 import AmectReport from "../views/amect_report.vue"
 import Reim from "../views/reim.vue"
 import NotFound from "../views/404.vue"
+import Online from "../views/online.vue"
 
 
 const routes = [{
@@ -152,6 +153,15 @@ const routes = [{
 				component: Reim,
 				meta: {
 					title: '报销管理',
+					isTab: true
+				}
+			},
+			{
+				path: '/online',
+				name: 'Online',
+				component: Online,
+				meta: {
+					title: '在线用户',
 					isTab: true
 				}
 			}

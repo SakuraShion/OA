@@ -1,5 +1,6 @@
 package com.example.emos.api.wxpay;
 
+import cn.hutool.http.useragent.UserAgent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ public class MyWXPayConfig extends WXPayConfig {
 
     @PostConstruct
     public void init() throws Exception{
+
         File file=new File(certPath);
         FileInputStream in=new FileInputStream(file);
         BufferedInputStream bin=new BufferedInputStream(in);
@@ -31,6 +33,7 @@ public class MyWXPayConfig extends WXPayConfig {
         bin.read(this.certData);
         bin.close();
         in.close();
+
     }
 
     @Override

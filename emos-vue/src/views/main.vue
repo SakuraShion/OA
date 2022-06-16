@@ -18,10 +18,10 @@
 						<SvgIcon name="zhedie" class="icon-svg" />
 					</el-menu-item>
 				</el-menu>
-				<el-menu class="site-navbar__menu site-navbar__menu--right" mode="horizontal">
+				<el-menu class="site-navbar__menu site-navbar__menu--right" mode="horizontal" @click="queryMessage()">
 					<el-menu-item index="1" class="site-navbar__switch">
 						<template #title>
-							<el-badge value="0">
+							<el-badge :value="msgNum" :max="max" type="primary" >
 								<SvgIcon name="duanxin" class="icon-svg duanxin-svg" />
 							</el-badge>
 						</template>
@@ -172,6 +172,14 @@
 							<SvgIcon name="tool_fill" class="icon-svg" />
 							<span slot="title">罚款类型</span>
 						</el-menu-item>
+						
+						<el-menu-item
+							index="online"
+							@click="$router.push({ name: 'Online' })"
+						>
+							<SvgIcon name="user_fill" class="icon-svg" />
+							<span slot="title">在线用户</span>
+						</el-menu-item>
 					</el-submenu>
 				</el-menu>
 			</div>
@@ -237,6 +245,8 @@ export default {
 			sidebarLayoutSkin: 'dark',
 			name: '',
 			photo: '',
+			msgNum: 220,
+			max: 99,
 			documentClientHeight: 0,
 			siteContentViewHeight: {},
 			height: null,
@@ -269,6 +279,10 @@ export default {
 		}
 	},
 	methods: {
+		
+		queryMessage: function() {
+			this.msgNum = this.msgNum + 1;
+		},
 		
 		updatePasswordHandle: function() {
 			// 为 true 时显示修改密码控件，false 隐藏

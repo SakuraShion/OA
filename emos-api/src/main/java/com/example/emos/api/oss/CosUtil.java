@@ -44,6 +44,7 @@ public class CosUtil {
         ClientConfig clientConfig = new ClientConfig(new Region(region));
         clientConfig.setHttpProtocol(HttpProtocol.https);
         COSClient cosClient = new COSClient(cred, clientConfig);
+
         return cosClient;
     }
 

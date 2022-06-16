@@ -68,7 +68,7 @@ public class MailSendUtils {
             MailSendUtils.sendEmail(mailInfo);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("邮件发送异常", e);
         }
     }
 

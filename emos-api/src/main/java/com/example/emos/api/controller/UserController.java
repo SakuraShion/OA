@@ -200,7 +200,7 @@ public class UserController {
         boolean result = (boolean) map.get("result");
         if (result) {
             int userId = (int) map.get("userId");
-            StpUtil.setLoginId(userId);
+            StpUtil.login(userId);
             Set<String> permissions = userService.searchUserPermissions(userId);
             map.remove("userId");
             map.put("permissions", permissions);

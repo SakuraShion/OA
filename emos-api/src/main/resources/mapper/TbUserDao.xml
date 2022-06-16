@@ -114,11 +114,13 @@
     <select id="searchIdByOpenId" parameterType="String" resultType="Integer">
         SELECT id FROM tb_user WHERE open_id=#{openId} AND status = 1
     </select>
+
     <select id="searchUserSummary" parameterType="int" resultType="HashMap">
         SELECT u.name, u.photo, d.dept_name AS deptName
         FROM tb_user u LEFT JOIN tb_dept d ON u.dept_id=d.id
         WHERE u.id=#{userId} AND u.status=1
     </select>
+    
     <select id="searchUserInfo" parameterType="int" resultType="HashMap">
         SELECT
             u.open_id AS openId,
