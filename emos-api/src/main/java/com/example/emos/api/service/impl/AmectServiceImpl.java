@@ -142,9 +142,7 @@ public class AmectServiceImpl implements AmectService {
 
     @Override
     public int updateStatus(HashMap param) {
-        System.out.println("========================" + param.get("status"));
         int count = amectDao.updateStatus(param);
-        System.out.println(count + "===================================");
         return count;
     }
 

@@ -52,10 +52,10 @@ public class CosUtil {
         String path = null; //文件将要存放的相对路径
         String fileName = file.getOriginalFilename();
         //根据传入的type判断放入哪个文件夹
-        if (type == type.ARCHIVE) {
+        if (type == TypeEnum.ARCHIVE) {
             path = "/archive/" + IdUtil.simpleUUID() + fileName.substring(fileName.lastIndexOf("."));
         }
-        if (type == type.PHOTO) {
+        if (type == TypeEnum.PHOTO) {
             path = "/photo/" + IdUtil.simpleUUID() + fileName.substring(fileName.lastIndexOf("."));
         }
 

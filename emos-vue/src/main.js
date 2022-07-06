@@ -19,7 +19,7 @@ app.use(router) //挂载路由插件
 
 //使用WebSocket，后端项目给前端页面推送通知更
 import VueNativeSock from "vue-native-websocket-vue3";
-app.use(VueNativeSock,"ws://112.124.56.83:8090/emos-api/socket",{ 
+app.use(VueNativeSock,"ws://localhost:8090/emos-api/socket",{ 
     "format": "json"
 });
 
@@ -87,7 +87,7 @@ app.config.globalProperties.$echarts = echarts  //设置全局变量$echarts
 
 
 //后端项目的URL根路径
-let baseUrl = "http://112.124.56.83:8090/emos-api/"
+let baseUrl = "http://localhost:8090/emos-api/"
 
 app.config.globalProperties.$baseUrl = baseUrl //设置全局变量$baseUrl
 

@@ -5,12 +5,18 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.example.emos.api.common.util.Constants;
 import com.example.emos.api.common.util.PageUtils;
 import com.example.emos.api.common.util.R;
+import com.example.emos.api.common.util.RedisCache;
 import com.example.emos.api.controller.form.userform.*;
+import com.example.emos.api.db.pojo.MessageEntity;
 import com.example.emos.api.db.pojo.TbUser;
 import com.example.emos.api.service.UserService;
+import com.example.emos.api.task.MessageTask;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +39,12 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private MessageTask messageTask;
+    
+    @Autowired 
+    private RedisCache redisCache;
+
     /**
      *  登陆功能
      * @param form 将HTTP 请求提交的数据进行保存，类中通过注解进行规则判断
@@ -44,6 +56,16 @@ public class UserController {
     @Operation(summary = "登陆系统")
     public R login(@Valid @RequestBody LoginForm form) {
         HashMap param = JSONUtil.parse(form).toBean(HashMap.class);
+
+        String verifyKey = Constants.CAPTCHA_CODE_KEY + form.getUuid();
+        String captcha = redisCache.getCacheObject(verifyKey);
+        redisCache.deleteObject(verifyKey);
+
+        if(StrUtil.isEmpty(captcha))
+            return R.error(Constants.CAPTCHA_EXPIRE_MSG);
+        else if (!StrUtil.equals(captcha, form.getCode()))
+            return R.error(Constants.CAPTCHA_ERROR);
+
         Integer userId = userService.login(param);
         R r = R.ok().put("result", userId != null ? true : false);
         if (userId != null) {
@@ -57,6 +79,8 @@ public class UserController {
             String token=StpUtil.getTokenInfo().getTokenValue();
             r.put("permissions",permissions).put("token",token);
         }
+
+        messageTask.receiveAsync(userId + "");
         return r;
     }
 
@@ -109,6 +133,7 @@ public class UserController {
         return R.ok().put("page", pageUtils);
     }
 
+
     @PostMapping("/insert")
     @Operation(summary = "添加新用户")
     @SaCheckPermission(value = {"ROOT", "USER:INSERT"}, mode = SaMode.OR)
@@ -120,6 +145,14 @@ public class UserController {
         user.setCreateTime(new Date());
 
         int rows = userService.insert(user);
+
+        MessageEntity entity = new MessageEntity();
+        entity.setSenderId(StpUtil.getLoginIdAsInt());
+        entity.setSenderName("系统消息");
+        entity.setMsg("欢迎您注册成为本公司的一员，请及时更新您的个人信息");
+        entity.setUuid(IdUtil.simpleUUID());
+        entity.setSendTime(new Date());
+        messageTask.sendAsync(user.getId() + "", entity);
 
         return R.ok().put("rows", rows);
     }
@@ -164,6 +197,7 @@ public class UserController {
             for (Integer id : form.getIds()) {
                 // 将被删除的用户踢下线
                 StpUtil.logoutByLoginId(id);
+                messageTask.deleteQueueAsync(id + "");
             }
         }
 
@@ -253,4 +287,5 @@ public class UserController {
         int rows = userService.setPhoto(param);
         return R.ok().put("rows", rows);
     }
+
 }

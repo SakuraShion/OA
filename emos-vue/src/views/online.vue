@@ -84,9 +84,9 @@ export default {
 		},
 	};
   },
-  created() {
-    // this.loadDataList();
-  },
+	created() {
+		// this.loadDataList();
+	},
 	methods: {
 		/** 查询登录日志列表 */
 		loadDataList: function() {

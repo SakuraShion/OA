@@ -21,6 +21,7 @@ import AmectReport from "../views/amect_report.vue"
 import Reim from "../views/reim.vue"
 import NotFound from "../views/404.vue"
 import Online from "../views/online.vue"
+import Notice from "../views/notice.vue"
 
 
 const routes = [{
@@ -162,6 +163,15 @@ const routes = [{
 				component: Online,
 				meta: {
 					title: '在线用户',
+					isTab: true
+				}
+			},
+			{
+				path: '/notice',
+				name: 'Notice',
+				component: Notice,
+				meta: {
+					title: '消息通知',
 					isTab: true
 				}
 			}

@@ -8,7 +8,7 @@
 		<nav class="site-navbar" :class="'site-navbar--' + navbarLayoutType">
 			<div class="site-navbar__header">
 				<h1 class="site-navbar__brand">
-					<a class="site-navbar__brand-lg">Emos在线办公系统</a>
+					<a class="site-navbar__brand-lg">轻云在线办公系统</a>
 					<a class="site-navbar__brand-mini">OA</a>
 				</h1>
 			</div>
@@ -18,8 +18,8 @@
 						<SvgIcon name="zhedie" class="icon-svg" />
 					</el-menu-item>
 				</el-menu>
-				<el-menu class="site-navbar__menu site-navbar__menu--right" mode="horizontal" @click="queryMessage()">
-					<el-menu-item index="1" class="site-navbar__switch">
+				<el-menu class="site-navbar__menu site-navbar__menu--right" mode="horizontal">
+					<el-menu-item index="1" class="site-navbar__switch" @click="$router.push({ name: 'Notice' })">
 						<template #title>
 							<el-badge :value="msgNum" :max="max" type="primary" >
 								<SvgIcon name="duanxin" class="icon-svg duanxin-svg" />
@@ -238,6 +238,11 @@ import SetPhoto from './set-photo.vue';
 import { ref, provide } from 'vue';
 export default {
 	components: { SvgIcon, UpdatePassword, SetPhoto },
+	provide(){
+	    return{
+			queryMessage:this.queryMessage,
+		}
+	},
 	data: function() {
 		return {
 			navbarLayoutType: '',
@@ -245,7 +250,7 @@ export default {
 			sidebarLayoutSkin: 'dark',
 			name: '',
 			photo: '',
-			msgNum: 220,
+			msgNum: 0,
 			max: 99,
 			documentClientHeight: 0,
 			siteContentViewHeight: {},
@@ -259,6 +264,8 @@ export default {
 	},
 	created() {
 		let that = this;
+		that.queryMessage();
+
 		that.routeHandle(that.$route);
 		//当WebSocket连接创建成功之后，会触发这个回调函数的运行
 		that.$options.sockets.onopen = function(resp) {
@@ -267,6 +274,17 @@ export default {
 				that.$socket.sendObj({ opt: 'ping' });
 			}, 60 * 1000);
 		};
+		setInterval(function() {
+			that.queryMessage();
+		}, 5*60*1000);
+		
+	},
+	destroyed() {
+	    clearInterval(this.positionTimer)// 清除定时器
+	    this.positionTimer = null
+	    // 离开路由之后断开websocket连接
+	    this.webSocketOnClose()
+	    this.websocketclose()
 	},
 	watch: {
 		$route: {
@@ -281,7 +299,11 @@ export default {
 	methods: {
 		
 		queryMessage: function() {
-			this.msgNum = this.msgNum + 1;
+			let that = this;
+			that.$http('message/refreshMessage', 'GET', null, true, function(resp) {
+				let count = resp.UnReadCount;
+				that.msgNum = count;
+			});
 		},
 		
 		updatePasswordHandle: function() {

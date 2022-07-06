@@ -25,6 +25,7 @@ public class ThreadPoolConfig {
         // 设置拒绝策略
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
+
         return executor;
     }
 

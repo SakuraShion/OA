@@ -5,7 +5,7 @@ import viteSvgIcons from 'vite-plugin-svg-icons';
 
 
 module.exports = {
-	base: '/emos-vue',
+	base: '/',
 	server: {
 		port: 3000,
 		//是否弹出浏览器

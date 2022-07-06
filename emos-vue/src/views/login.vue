@@ -1,56 +1,60 @@
 <template>
-	<div class="page">
-		<el-row type="flex" justify="center" align="middle" class="container">
-			<el-col :lg="14" :xl="10" class="hidden-md-and-down">
-				<el-row class="panel">
-					<el-col :span="12">
-						<div class="left">
-							<img src="../assets/login/logo.png" class="logo" />
-							<img src="../assets/login/big-1.png" class="big" />
-						</div>
-					</el-col>
-					<el-col :span="12">
-						<div class="right">
-							<div class="title-container">
-								<h2>Emos在线办公平台</h2>
-								<span>( Ver 1.0 )</span>
-							</div>
-							<div v-if="!qrCodeVisible">
-								<div class="row">
-									<el-input
-										v-model="username"
-										placeholder="用户名"
-										prefix-icon="el-icon-user"
-										clearable="clearable"
-									/>
-								</div>
-								<div class="row">
-									<el-input
-										type="password"
-										v-model="password"
-										placeholder="密码"
-										prefix-icon="el-icon-lock"
-										clearable="clearable"
-									/>
-								</div>
-								<div class="row">
-									<el-button type="primary" class="btn" @click="login">登陆系统</el-button>
-								</div>
-								<div class="row"><a class="link" @click="changeMode">二维码登陆</a></div>
-							</div>
-							<div v-if="qrCodeVisible">
-								<div class="qrCode-container">
-									<img :src="qrCode" height="153" class="qrCode" />
-									<img src="../assets/login/phone.png" height="148" />
-								</div>
-								<div class="row"><a class="link" @click="changeMode">用户名密码登陆</a></div>
-							</div>
-						</div>
-					</el-col>
-				</el-row>
-			</el-col>
-		</el-row>
-	</div>
+  <div class="login">
+    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
+      <h3 class="title">轻云在线办公系统</h3>
+      <el-form-item prop="username">
+        <el-input
+          v-model="username"
+          type="text"
+          auto-complete="off"
+          placeholder="账号"
+        >
+          <svg-icon slot="prefix" icon-class="user" class="el-input__icon input-icon" />
+        </el-input>
+      </el-form-item>
+      <el-form-item prop="password">
+        <el-input
+          v-model="password"
+          type="password"
+          auto-complete="off"
+          placeholder="密码"
+          @keyup.enter.native="login()"
+        >
+          <svg-icon slot="prefix" icon-class="password" class="el-input__icon input-icon" />
+        </el-input>
+      </el-form-item>
+      <el-form-item prop="code">
+        <el-input
+          v-model="code"
+          auto-complete="off"
+          placeholder="验证码"
+          style="width: 63%"
+          @keyup.enter.native="login()"
+        >
+          <svg-icon slot="prefix" icon-class="validCode" class="el-input__icon input-icon" />
+        </el-input>
+        <div class="login-code">
+          <img :src="codeUrl" @click="getCode" class="login-code-img"/>
+        </div>
+      </el-form-item>
+      <el-form-item style="width:100%;">
+        <el-button
+          :loading="loading"
+          size="medium"
+          type="primary"
+          style="width:100%;"
+          @click.native.prevent="login()"
+        >
+          <span v-if="!loading">登 录</span>
+          <span v-else>登 录 中...</span>
+        </el-button>
+      </el-form-item>
+    </el-form>
+    <!--  底部  -->
+    <div class="el-login-footer">
+      <a href="https://beian.miit.gov.cn/" target="_blank">皖ICP备2021017894号-1</a>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -62,48 +66,31 @@ export default {
 		return {
 			username: 123456,
 			password: 123456,
-			qrCodeVisible: false,
-			qrCode: '',
-			uuid: null,
-			qrCodeTimer: null,
-			loginTimer: null
+			code: "",
+			uuid: "",
+			codeUrl: "",
 		};
+	},
+	
+	created() {
+		this.getCode();
 	},
 
 	methods: {
 		
-		changeMode: function() {
+		getCode: function() {
 			let that = this;
-			that.qrCodeVisible = !that.qrCodeVisible;
-			//加载二维码图片
-			if (that.qrCodeVisible) {
-				that.loadQRCode();
-				//创建刷新二维码定时器
-				that.qrCodeTimer = setInterval(function() {
-					that.loadQRCode();
-				}, 5 * 60 * 1000);
-				that.loginTimer = setInterval(function() {
-					that.$http('user/wechatLogin', 'POST', { uuid: that.uuid },true, function(resp) {
-						if (resp.result) {
-							clearInterval(that.qrCodeTimer);
-							clearInterval(that.loginTimer);
-							let permissions = resp.permissions;
-							localStorage.setItem('permissions', permissions);
-							router.push({ name: 'Home' });
-						}
-					});
-				}, 5000);
-			} else {
-				//销毁刷新二维码定时器
-				clearInterval(that.qrCodeTimer);
-				clearInterval(that.loginTimer);
-			}
-		},
-		//加载二维码图片的封装方法
-		loadQRCode: function() {
-			this.$http('user/createQrCode', 'GET', null,true, resp => {
-				this.qrCode = resp.pic;
-				this.uuid = resp.uuid;
+			that.$http('captchaImage', 'GET', null, true, function(resp) {
+			    if (resp.code == 200) {
+			        that.uuid = resp.uuid;
+					that.codeUrl = "data:image/gif;base64," + resp.img;
+			    } else {
+			        that.$message({
+			            message: '验证码生成失败',
+			            type: 'error',
+			            duration: 1200
+			        });
+			    }
 			});
 		},
 		
@@ -111,18 +98,25 @@ export default {
 		    let that = this;
 		    if (!isUsername(that.username)) {
 		        that.$message({
-		            message: '用户名格式不正确',
+		            message: '用户名格式错误',
 		            type: 'error',
 		            duration: 1200
 		        });
 		    } else if (!isPassword(that.password)) {
 		        that.$message({
-		            message: '密码格式不正确',
+		            message: '密码格式错误',
 		            type: 'error',
 		            duration: 1200
 		        });
-		    } else {
-		        let data = { username: that.username, password: that.password };
+		    } else if(that.code.length == 0 || that.code == ''){
+				that.$message({
+				    message: '请输入验证码',
+				    type: 'error',
+				    duration: 1200
+				});
+			} else {
+		        let data = { username: that.username, password: that.password, 
+							code: that.code, uuid: that.uuid};
 		        //发送登陆请求
 		        that.$http('user/login', 'POST', data, true, function(resp) {
 		            if (resp.result) {
@@ -136,7 +130,7 @@ export default {
 		                router.push({ name: 'Home' });
 		            } else {
 		                that.$message({
-		                    message: '登陆失败',
+		                    message: '用户名或密码错误',
 		                    type: 'error',
 		                    duration: 1200
 		                });
@@ -148,6 +142,65 @@ export default {
 };
 </script>
 
-<style lang="less" scoped="scoped">
-@import url('login.less');
+<style rel="stylesheet/scss" lang="scss">
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-image: url("../assets/login/login-background.jpg");
+  background-size: cover;
+}
+.title {
+  margin: 0px auto 30px auto;
+  text-align: center;
+  color: #707070;
+}
+
+.login-form {
+  border-radius: 6px;
+  background: #ffffff;
+  width: 400px;
+  padding: 25px 25px 5px 25px;
+  .el-input {
+    height: 38px;
+    input {
+      height: 38px;
+    }
+  }
+  .input-icon {
+    height: 39px;
+    width: 14px;
+    margin-left: 2px;
+  }
+}
+.login-tip {
+  font-size: 13px;
+  text-align: center;
+  color: #bfbfbf;
+}
+.login-code {
+  width: 33%;
+  height: 38px;
+  float: right;
+  img {
+    cursor: pointer;
+    vertical-align: middle;
+  }
+}
+.el-login-footer {
+  height: 40px;
+  line-height: 40px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-family: Arial;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.login-code-img {
+  height: 38px;
+}
 </style>

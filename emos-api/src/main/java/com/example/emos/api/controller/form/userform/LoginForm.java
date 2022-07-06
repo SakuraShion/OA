@@ -24,4 +24,12 @@ public class LoginForm {
     @Pattern(regexp = "^[a-zA-Z0-9]{6,20}$", message = "密码格式错误")
     @Schema(description = "密码")
     private String password;
+
+    @NotBlank(message = "验证码不能为空")
+    @Schema(description = "验证码")
+    private String code;
+
+    @NotBlank(message = "验证码过期")
+    @Schema(description = "标识")
+    private String uuid;
 }

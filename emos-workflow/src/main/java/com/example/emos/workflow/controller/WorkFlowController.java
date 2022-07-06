@@ -1,15 +1,8 @@
 package com.example.emos.workflow.controller;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.HexUtil;
-import cn.hutool.crypto.SecureUtil;
-import cn.hutool.crypto.symmetric.AES;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.example.emos.workflow.controller.form.*;
-import com.example.emos.workflow.exception.EmosException;
 import com.example.emos.workflow.service.WorkflowService;
 import com.example.emos.workflow.util.R;
 import org.activiti.bpmn.model.BpmnModel;
@@ -138,7 +131,7 @@ public class WorkFlowController {
     public R searchProcessStatus(@Valid @RequestBody SearchProcessStatusForm form) {
     
         boolean bool = workflowService.searchProcessStatus(form.getInstanceId());
-        if (bool == false) {
+        if (!bool) {
             //工作流未结束
             return R.ok().put("result", "未结束");
         } else {

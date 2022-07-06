@@ -101,8 +101,8 @@ wx:
   app-secret: 9d80f4125c50e1cf8bc6031c9319b2df
   mch-id: 1526972031
   key: qv9Kihy5TOJxGySzFO8pd4wCMg3tn6YK
-  cert-path: /root/emos-api/apiclient_cert.p12
-#  cert-path: D:/emos/apiclient_cert.p12
+#  cert-path: /root/emos-api/apiclient_cert.p12
+  cert-path: D:/emos/apiclient_cert.p12
 emos:
   code: A23B9D9E0E0701C1
   tcode: "368214"
