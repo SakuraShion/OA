@@ -38,16 +38,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     private RuntimeService runtimeService;
 
     @Autowired
-    private ProcessEngine processEngine;
-
-    @Autowired
     private TaskService taskService;
 
     @Autowired
     private HistoryService historyService;
-
-    @Autowired
-    private KieSession kieSession;
 
     @Autowired
     private MeetingService meetingService;

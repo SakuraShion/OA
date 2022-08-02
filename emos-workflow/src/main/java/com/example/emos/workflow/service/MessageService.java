@@ -1,7 +1,7 @@
-package com.example.emos.api.service;
+package com.example.emos.workflow.service;
 
-import com.example.emos.api.db.pojo.MessageEntity;
-import com.example.emos.api.db.pojo.MessageRefEntity;
+import com.example.emos.workflow.db.pojo.MessageEntity;
+import com.example.emos.workflow.db.pojo.MessageRefEntity;
 
 import java.util.HashMap;
 import java.util.List;

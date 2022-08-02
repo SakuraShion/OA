@@ -5,9 +5,11 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.druid.sql.dialect.h2.visitor.H2ASTVisitor;
+import com.example.emos.api.common.util.Constants;
 import com.example.emos.api.db.dao.TbLeaveDao;
 import com.example.emos.api.db.dao.TbUserDao;
 import com.example.emos.api.exception.EmosException;
+import com.example.emos.api.task.rabbit.RabbitSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,12 +26,6 @@ import java.util.HashMap;
 @Component
 public class LeaveWorkflowTask {
 
-    @Value("${emos.code}")
-    private String code;
-
-    @Value("${emos.tcode}")
-    private String tcode;
-
     @Value("${workflow.url}")
     private String workflow;
 
@@ -42,6 +38,9 @@ public class LeaveWorkflowTask {
     @Autowired
     private TbLeaveDao leaveDao;
 
+    @Autowired
+    private RabbitSender rabbitSender;
+
     @Async("AsyncTaskExecutor")
     public void startLeaveWorkflow(int id, int creatorId, String days) {
         HashMap info = userDao.searchUserInfo(creatorId);
@@ -49,33 +48,37 @@ public class LeaveWorkflowTask {
         json.set("url", recieveNotify);
         json.set("creatorId", creatorId);
         json.set("creatorName", info.get("name").toString());
-        json.set("code", code);
-        json.set("tcode", tcode);
         json.set("title", info.get("dept").toString() + info.get("name").toString() + "的请假");
         Integer managerId = userDao.searchDeptManagerId(creatorId);
         json.set("managerId", managerId);
         Integer gmId = userDao.searchGmId();
         json.set("gmId", gmId);
         json.set("days", Double.valueOf(days));
+        json.set("id", id);
 
-        String url = workflow + "/workflow/startLeaveProcess";
-        HttpResponse resp = HttpRequest.post(url).header("Content-Type", "application/json")
-                .body(json.toString()).execute();
+        String param = JSONUtil.toJsonStr(json);
 
-        if (resp.getStatus() == 200) {
-            json = JSONUtil.parseObj(resp.body());
-            String instanceId = json.getStr("instanceId");
-            HashMap param = new HashMap();
-            param.put("id", id);
-            param.put("instanceId", instanceId);
-
-            int rows = leaveDao.updateLeaveInstanceId(param);
-            if (rows != 1) {
-                throw new EmosException("保存请假工作流实例ID失败");
-            }
-        } else {
-            log.error(resp.body());
+        try {
+            rabbitSender.send(param, Constants.TARGET_START_LEAVE_PROCESS);
+        } catch (Exception e) {
+            log.error("生产者发送异常", e);
         }
+
+
+//        if (resp.getStatus() == 200) {
+//            json = JSONUtil.parseObj(resp.body());
+//            String instanceId = json.getStr("instanceId");
+//            HashMap param = new HashMap();
+//            param.put("id", id);
+//            param.put("instanceId", instanceId);
+//
+//            int rows = leaveDao.updateLeaveInstanceId(param);
+//            if (rows != 1) {
+//                throw new EmosException("保存请假工作流实例ID失败");
+//            }
+//        } else {
+//            log.error(resp.body());
+//        }
     }
 
 
@@ -85,16 +88,13 @@ public class LeaveWorkflowTask {
         json.set("instanceId", instanceId);
         json.set("type", type);
         json.set("reason", reason);
-        json.set("code", code);
-        json.set("tcode", tcode);
 
-        String url = workflow + "/workflow/deleteProcessById";
-        HttpResponse resp = HttpRequest.post(url).header("Content-Type", "application/json")
-                .body(json.toString()).execute();
+        String param = JSONUtil.toJsonStr(json);
 
-        if (resp.getStatus() != 200) {
-            log.error(resp.body());
-            throw new EmosException("请假工作流删除失败");
+        try {
+            rabbitSender.send(param, Constants.TARGET_DELETE_PROCESS_BY_ID);
+        } catch (Exception e) {
+            log.error("生产者发送异常", e);
         }
     }
 }

@@ -72,6 +72,11 @@ public class MeetingServiceImpl implements MeetingService {
     }
 
     @Override
+    public ArrayList<Integer> searchMeetingMembers(String uuid) {
+        return meetingDao.searchMeetingMembers(uuid);
+    }
+
+    @Override
     public int updateMeetingUnpresent(HashMap param) {
         int rows=meetingDao.updateMeetingUnpresent(param);
         return rows;

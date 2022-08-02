@@ -17,6 +17,8 @@ public interface MeetingService {
 
     ArrayList<Integer> searchMeetingUnpresent(String uuid);
 
+    ArrayList<Integer> searchMeetingMembers(String uuid);
+
     int updateMeetingUnpresent(HashMap param);
 
 

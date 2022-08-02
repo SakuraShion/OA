@@ -37,6 +37,14 @@ spring:
         max-wait: -1ms
         max-idle: 16
         min-idle: 8
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: emos
+      authentication-database: admin
+      username: admin
+      password: abc123456
   activiti:
     database-schema-update: true
     historyLevel: audit

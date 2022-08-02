@@ -162,7 +162,4 @@ public class MeetingServiceImpl implements MeetingService {
         return meetingDao.updateMeetingPresent(param);
     }
 
-
-
-
 }

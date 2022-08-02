@@ -17,12 +17,6 @@ public class DeleteProcessByIdForm {
     @NotBlank(message = "reason不能为空")
     private String reason;
 
-    @NotBlank(message = "code不能为空")
-    private String code;
-
     private String uuid;
 
-    @NotBlank(message = "tcode不能为空")
-    @Pattern(regexp = "^[0-9]{6}$",message = "tcode必须是6位数字")
-    private String tcode;
 }

@@ -57,10 +57,13 @@ public class UserController {
     public R login(@Valid @RequestBody LoginForm form) {
         HashMap param = JSONUtil.parse(form).toBean(HashMap.class);
 
+        // 验证码验证
         String verifyKey = Constants.CAPTCHA_CODE_KEY + form.getUuid();
         String captcha = redisCache.getCacheObject(verifyKey);
+        // 删除验证码，使用一次失效
         redisCache.deleteObject(verifyKey);
 
+        // 验证码验证，如果验证结果不存在就说明过期，结果和输入不一致就输入错误
         if(StrUtil.isEmpty(captcha))
             return R.error(Constants.CAPTCHA_EXPIRE_MSG);
         else if (!StrUtil.equals(captcha, form.getCode()))

@@ -11,5 +11,7 @@ public interface TbReimDao {
 
     int updateReimStatus(HashMap param);
 
+    int updateReimInstanceId(HashMap param);
+
     HashMap searchStartInfo(String id);
 }

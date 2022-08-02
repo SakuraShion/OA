@@ -1,10 +1,11 @@
-package com.example.emos.api.service.impl;
+package com.example.emos.workflow.service.impl;
 
-import com.example.emos.api.db.dao.MessageDao;
-import com.example.emos.api.db.dao.MessageRefDao;
-import com.example.emos.api.db.pojo.MessageEntity;
-import com.example.emos.api.db.pojo.MessageRefEntity;
-import com.example.emos.api.service.MessageService;
+
+import com.example.emos.workflow.db.dao.MessageDao;
+import com.example.emos.workflow.db.dao.MessageRefDao;
+import com.example.emos.workflow.db.pojo.MessageEntity;
+import com.example.emos.workflow.db.pojo.MessageRefEntity;
+import com.example.emos.workflow.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

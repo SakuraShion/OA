@@ -1,4 +1,4 @@
-package com.example.emos.api.db.pojo;
+package com.example.emos.workflow.db.pojo;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

@@ -5,11 +5,18 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.example.emos.api.common.util.Constants;
 import com.example.emos.api.common.util.R;
 import com.example.emos.api.controller.form.meetingform.RecieveNotifyForm;
 import com.example.emos.api.db.dao.TbMeetingDao;
 import com.example.emos.api.db.dao.TbUserDao;
+import com.example.emos.api.db.pojo.MessageEntity;
 import com.example.emos.api.exception.EmosException;
+import com.example.emos.api.task.rabbit.RabbitSender;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,17 +41,9 @@ public class MeetingWorkflowTask {
     @Autowired
     private TbMeetingDao meetingDao;
 
-    @Value("${emos.recieveNotify}")
-    private String recieveNotify;
+    @Autowired
+    private RabbitSender rabbitSender;
 
-    @Value("${emos.code}")
-    private String code;
-
-    @Value("${emos.tcode}")
-    private String tcode;
-
-    @Value("${workflow.url}")
-    private String workflow;
 
     /**
      * @Async("AsyncTaskExecutor"): 当执行此方法时会开启一个新的线程去异步执行此操作，调用 AsyncTaskExecutor 自定义线程池去开启线程
@@ -56,17 +55,14 @@ public class MeetingWorkflowTask {
      * @param meetingType 会议类型
      */
     @Async("AsyncTaskExecutor")
-    public void startMeetingWorkflow(String uuid, int creatorId, String title, String date, String start, String meetingType) {
+    public void startMeetingWorkflow(String uuid, int creatorId, String title, String date, String start, String meetingType){
         HashMap info = userDao.searchUserInfo(creatorId);
 
         // 保存要提交的数据
         JSONObject json = new JSONObject();
-        json.set("url", recieveNotify);
         json.set("uuid", uuid);
         json.set("creatorId",creatorId);
         json.set("creatorName",info.get("name").toString());
-        json.set("code", code);
-        json.set("tcode", tcode);
         json.set("title",title);
         json.set("date", date);
         json.set("start", start);
@@ -87,27 +83,30 @@ public class MeetingWorkflowTask {
             json.set("sameDept", bool);
         }
 
-        // 发送 HTTP 请求
-        String url = workflow + "/workflow/startMeetingProcess";
-        HttpResponse resp = HttpRequest.post(url).header("Content-Type", "application/json")
-                .body(json.toString()).execute();
+        String param = JSONUtil.toJsonStr(json);
+
+        try {
+            rabbitSender.send(param, Constants.TARGET_START_MEETING_PROCESS);
+        } catch (Exception e) {
+            log.error("生产者发送异常", e);
+        }
 
         // 响应成功，对会议进行修改，修改流程实例 id
-        if (resp.getStatus() == 200) {
-            json = JSONUtil.parseObj(resp.body());
-            String instanceId = json.getStr("instanceId");
-
-            HashMap param = new HashMap();
-            param.put("uuid", uuid);
-            param.put("instanceId", instanceId);
-
-            int row = meetingDao.updateMeetingInstanceId(param);
-            if (row != 1) {
-                throw new EmosException("保存会议工作流id 失败");
-            }
-        } else {
-            log.error(resp.body());
-        }
+//        if (resp.getStatus() == 200) {
+//            json = JSONUtil.parseObj(resp.body());
+//            String instanceId = json.getStr("instanceId");
+//
+//            HashMap param = new HashMap();
+//            param.put("uuid", uuid);
+//            param.put("instanceId", instanceId);
+//
+//            int row = meetingDao.updateMeetingInstanceId(param);
+//            if (row != 1) {
+//                throw new EmosException("保存会议工作流id 失败");
+//            }
+//        } else {
+//            log.error(resp.body());
+//        }
     }
 
     @Async("AsyncTaskExecutor")
@@ -116,19 +115,13 @@ public class MeetingWorkflowTask {
         json.set("uuid", uuid);
         json.set("instanceId", instanceId);
         json.set("reason", reason);
-        json.set("code", code);
-        json.set("tcode", tcode);
         json.set("type", "会议申请");
 
-        String url = workflow + "/workflow/deleteProcessById";
-
-        HttpResponse resp = HttpRequest.post(url).header("Content-Type", "application/json")
-                .body(json.toString()).execute();
-
-        if (resp.getStatus() == 200) {
-            log.debug("删除了会议申请");
-        } else {
-            log.error(resp.body());
+        String param = JSONUtil.toJsonStr(json);
+        try {
+            rabbitSender.send(param, Constants.TARGET_DELETE_PROCESS_BY_ID);
+        } catch (Exception e) {
+            log.error("删除会议工作流异常", e);
         }
     }
 

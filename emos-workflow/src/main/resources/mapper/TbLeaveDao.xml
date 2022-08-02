@@ -29,4 +29,10 @@
         UPDATE tb_leave SET status=#{status} WHERE instance_id=#{instanceId}
     </update>
 
+    <update id="updateLeaveInstanceId">
+        update tb_leave
+        set instance_id = #{instanceId}
+        where id = #{id}
+    </update>
+
 </mapper>

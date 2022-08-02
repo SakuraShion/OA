@@ -11,6 +11,8 @@ public interface TbLeaveDao {
 
     int updateLeaveStatus(HashMap param);
 
+    int updateLeaveInstanceId(HashMap param);
+
     HashMap searchStartAndEndById(String id);
 
 }

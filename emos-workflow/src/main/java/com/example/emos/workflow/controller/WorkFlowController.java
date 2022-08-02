@@ -58,7 +58,6 @@ public class WorkFlowController {
         param.put("type", "会议申请");
         param.put("createDate", DateUtil.today());
 
-        param.remove("code");
         if (form.getGmId() == null) {
 
             param.put("identity", "总经理");

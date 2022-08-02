@@ -9,8 +9,6 @@ import javax.validation.constraints.Pattern;
 
 @Data
 public class ArchiveTaskForm {
-    @NotBlank(message = "code不能为空")
-    private String code;
 
     @NotBlank(message = "taskId不能为空")
     private String taskId;
@@ -22,7 +20,4 @@ public class ArchiveTaskForm {
     @NotBlank(message = "files不能为空")
     private String files;
 
-    @NotBlank(message = "tcode不能为空")
-    @Pattern(regexp = "^[0-9]{6}$",message = "tcode必须是6位数字")
-    private String tcode;
 }

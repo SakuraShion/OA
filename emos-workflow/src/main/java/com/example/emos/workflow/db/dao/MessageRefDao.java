@@ -1,6 +1,6 @@
-package com.example.emos.api.db.dao;
+package com.example.emos.workflow.db.dao;
 
-import com.example.emos.api.db.pojo.MessageRefEntity;
+import com.example.emos.workflow.db.pojo.MessageRefEntity;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.springframework.beans.factory.annotation.Autowired;

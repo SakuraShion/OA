@@ -1,6 +1,7 @@
 package com.example.emos.workflow.db.dao;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +21,11 @@ public interface TbMeetingDao {
 
     ArrayList<Integer> searchMeetingUnpresent(String uuid);
 
+    ArrayList<Integer> searchMeetingMembers(@Param("uuid") String uuid);
+
     int updateMeetingUnpresent(HashMap param);
+
+    int updateMeetingInstanceId(HashMap param);
 
     HashMap searchStartAndEndByUserId(String id);
 }

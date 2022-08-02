@@ -3,12 +3,16 @@ package com.example.emos.workflow.bpmn;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONObject;
 import com.example.emos.workflow.config.quartz.MeetingRoomJob;
 import com.example.emos.workflow.config.quartz.MeetingStatusJob;
 import com.example.emos.workflow.config.quartz.QuartzUtil;
+import com.example.emos.workflow.db.pojo.MessageEntity;
 import com.example.emos.workflow.service.MeetingService;
+import com.example.emos.workflow.service.MessageService;
 import com.example.emos.workflow.task.MailTask;
+import com.example.emos.workflow.task.MessageTask;
 import com.example.emos.workflow.util.MailConst;
 import com.example.emos.workflow.util.MailSendUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +23,7 @@ import org.quartz.JobDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +39,12 @@ public class NotifyMeetingService implements JavaDelegate {
 
     @Autowired
     private MailTask mailTask;
+
+    @Autowired
+    private MessageTask messageTask;
+
+    @Autowired
+    private MessageService messageService;
 
     @SuppressWarnings("all")
     @Override
@@ -53,6 +64,8 @@ public class NotifyMeetingService implements JavaDelegate {
                 put("uuid", uuid);
                 put("status", 3);
             }});
+
+
 
             String meetingType = delegateExecution.getVariable("meetingType", String.class);
             if (meetingType.equals("线上会议")) {
@@ -92,6 +105,21 @@ public class NotifyMeetingService implements JavaDelegate {
 
                 executeDate = DateUtil.parse(date + " " + end, "yyyy-MM-dd HH:mm");
                 quartzUtil.addJob(jobDetail, uuid, "会议结束任务组", executeDate);
+
+                // 发送消息
+                MessageEntity entity = new MessageEntity();
+                entity.setSenderId(0);
+                entity.setSenderName("系统消息");
+                entity.setMsg("您有一场新的会议，可在会议管理中进行查看！");
+                entity.setUuid(IdUtil.simpleUUID());
+                entity.setSendTime(new Date());
+                messageService.insertMessage(entity);
+
+
+                ArrayList<Integer> list = meetingService.searchMeetingMembers(uuid);
+                for (Integer userId : list) {
+                    messageTask.sendAsync(userId + "", entity);
+                }
             }
             // 此时会议申请已通过，所以会议工作流组不再需要，进行删除
             quartzUtil.deleteJob(uuid, "会议工作流组");            

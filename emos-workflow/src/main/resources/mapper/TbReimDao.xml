@@ -29,4 +29,10 @@
         SET status = #{status}
         WHERE instance_id = #{instanceId}
     </update>
+
+    <update id="updateReimInstanceId" parameterType="hashmap">
+        update tb_reim
+        set instance_id = #{instanceId}
+        where id = #{id}
+    </update>
 </mapper>

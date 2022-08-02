@@ -73,6 +73,11 @@
         join tb_user u ON m.creator_id = u.id
         where m.uuid = #{id}
     </select>
+    <select id="searchMeetingMembers" parameterType="String" resultType="Integer">
+        SELECT u.id
+        FROM tb_meeting m JOIN tb_user u ON JSON_CONTAINS ( m.members, CONVERT ( u.id, CHAR ) )
+        WHERE m.uuid=#{uuid}
+    </select>
     <update id="updateMeetingStatus" parameterType="HashMap">
         UPDATE tb_meeting
         SET `status`=#{status}
@@ -82,5 +87,10 @@
         UPDATE tb_meeting
         SET unpresent=#{unpresent}
         WHERE uuid=#{uuid}
+    </update>
+    <update id="updateMeetingInstanceId">
+        update tb_meeting
+        set instance_id = #{instanceId}
+        where uuid = #{uuid}
     </update>
 </mapper>

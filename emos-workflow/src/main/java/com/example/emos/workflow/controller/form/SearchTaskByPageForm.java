@@ -36,11 +36,5 @@ public class SearchTaskByPageForm {
     @Pattern(regexp = "^[0-9A-Za-z\\-]{36}$", message = "instanceId内容不正确")
     private String instanceId;
 
-    @NotBlank(message = "code不能为空")
-    private String code;
-
-    @NotBlank(message = "tcode不能为空")
-    @Pattern(regexp = "^[0-9]{6}$",message = "tcode必须是6位数字")
-    private String tcode;
 
 }

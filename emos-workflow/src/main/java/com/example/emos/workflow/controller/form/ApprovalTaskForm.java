@@ -15,11 +15,5 @@ public class ApprovalTaskForm {
     @Pattern(regexp = "^同意$|^不同意$", message = "approval内容不正确")
     private String approval;
 
-    @NotBlank(message = "code不能为空")
-    private String code;
-
-    @NotBlank(message = "tcode不能为空")
-    @Pattern(regexp = "^[0-9]{6}$",message = "tcode必须是6位数字")
-    private String tcode;
 
 }

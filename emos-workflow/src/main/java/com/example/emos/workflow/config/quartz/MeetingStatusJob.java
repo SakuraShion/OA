@@ -4,10 +4,13 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
+import com.example.emos.workflow.db.pojo.MessageEntity;
 import com.example.emos.workflow.db.pojo.TbAmect;
 import com.example.emos.workflow.service.AmectService;
 import com.example.emos.workflow.service.AmectTypeService;
 import com.example.emos.workflow.service.MeetingService;
+import com.example.emos.workflow.service.MessageService;
+import com.example.emos.workflow.task.MessageTask;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +36,12 @@ public class MeetingStatusJob extends QuartzJobBean {
 
     @Autowired
     private AmectTypeService amectTypeService;
+
+    @Autowired
+    private MessageTask messageTask;
+
+    @Autowired
+    private MessageService messageService;
 
     /**
      * 到时间自动更新会议状态
@@ -83,6 +93,15 @@ public class MeetingStatusJob extends QuartzJobBean {
                 BigDecimal money = (BigDecimal) map.get("money");
                 Integer typeId = (Integer) map.get("id");
 
+                MessageEntity entity = new MessageEntity();
+                entity.setSenderId(0);
+                entity.setSenderName("系统消息");
+                entity.setMsg("请注意！您已缺席" + date + " " + start + "~" + end + "的" + title + "，请及时缴纳罚款");
+                entity.setUuid(IdUtil.simpleUUID());
+                entity.setSendTime(new Date());
+                messageService.insertMessage(entity);
+
+
                 //根据缺席名单生成罚款单
                 TbAmect amect = new TbAmect();
                 amect.setAmount(money);
@@ -92,6 +111,7 @@ public class MeetingStatusJob extends QuartzJobBean {
                     amect.setUuid(IdUtil.simpleUUID());
                     amect.setUserId(one);
                     amectService.insert(amect);
+                    messageTask.sendAsync(one + "", entity);
                 });
             }
         }
