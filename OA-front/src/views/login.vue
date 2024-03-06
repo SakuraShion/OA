@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
-      <h3 class="title">轻云在线办公系统</h3>
+      <h3 class="title">办公系统</h3>
       <el-form-item prop="username">
         <el-input
           v-model="username"
@@ -50,10 +50,6 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <!--  底部  -->
-    <div class="el-login-footer">
-      <a href="https://beian.miit.gov.cn/" target="_blank">皖ICP备2021017894号-1</a>
-    </div>
   </div>
 </template>
 
@@ -148,7 +144,7 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url("../assets/login/login-background.jpg");
+  background-image: url("../assets/login/back.png");
   background-size: cover;
 }
 .title {
